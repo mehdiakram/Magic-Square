@@ -58,4 +58,4 @@ If you would like to improve this project:
 
 ---
 
-© 2024 **Royal Technologies**. All rights reserved.
+© 2026 **Royal Technologies**. All rights reserved.
