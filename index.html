@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Square</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --highlight: #fbbf24;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+
+        .controls {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="date"] {
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            outline: none;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .highlight-btn { background: #6366f1; font-size: 0.85rem; }
+
+        .magic-grid {
+            display: grid;
+            /* 4 columns for numbers + 1 for row sums */
+            grid-template-columns: repeat(4, 75px) 130px; 
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .cell {
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .row-sum-label {
+            width: 130px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+        }
+
+        /* Col Sum ভার্টিকালি করার জন্য স্টাইল */
+        .col-sum-label {
+            width: 75px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+        }
+
+        .highlighted {
+            background: var(--highlight) !important;
+            color: black !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--highlight);
+        }
+
+        .info-box {
+            margin-top: 30px;
+            padding: 15px;
+            background: #eef2ff;
+            border-radius: 12px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        footer a { color: var(--primary); text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Magic Square</h1>
+    <div class="controls">
+        <input type="date" id="dob" value="1887-12-22">
+        <button onclick="generate()">Generate Square</button>
+    </div>
+
+    <div id="magicUI" style="display:none;">
+        <div class="controls">
+            <button class="highlight-btn" onclick="highlight('corners')">Highlight Corners</button>
+            <button class="highlight-btn" onclick="highlight('center')">Highlight Center (2x2)</button>
+            <button class="highlight-btn" onclick="highlight('quads')">Highlight Quadrants</button>
+            <button style="background:#94a3b8" onclick="clearHighlight()">Clear</button>
+        </div>
+
+        <div class="magic-grid" id="grid"></div>
+        <div id="diagInfo" class="info-box"></div>
+    </div>
+</div>
+
+<footer>
+    Inspired by <strong>Srinivasa Ramanujan's</strong> Birthday Magic Square [cite: 1, 57] <br>
+    Developed by <a href="https://www.royaltechbd.com/" target="_blank">Royal Technologies</a> 
+</footer>
+
+<script>
+let currentCells = [];
+
+function generate() {
+    const dateInput = document.getElementById('dob').value;
+    if(!dateInput) return;
+
+    const d = new Date(dateInput);
+    const A = d.getDate(); // Day [cite: 8, 15]
+    const B = d.getMonth() + 1; // Month [cite: 8, 15]
+    const C = Math.floor(d.getFullYear() / 100); // Century [cite: 8, 15]
+    const D = d.getFullYear() % 100; // Year [cite: 8, 15]
+    
+    const data = [
+        [A, B, C, D], // Row 1 [cite: 8, 29]
+        [D+1, C-1, B-3, A+3], // Row 2 [cite: 8, 30]
+        [B-2, A+2, D+2, C-2], // Row 3 [cite: 8, 30]
+        [C+1, D-1, A+1, B-1]  // Row 4 [cite: 8, 31]
+    ];
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    currentCells = [];
+    let colSums = [0, 0, 0, 0];
+
+    data.forEach((row, rIdx) => {
+        let rowSum = 0;
+        row.forEach((val, cIdx) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = val;
+            cell.id = `cell-${rIdx}-${cIdx}`;
+            grid.appendChild(cell);
+            currentCells.push(cell);
+            rowSum += val;
+            colSums[cIdx] += val;
+        });
+        const rSumCell = document.createElement('div');
+        rSumCell.className = 'row-sum-label';
+        rSumCell.innerText = `Row Sum: ${rowSum}`; // [cite: 46]
+        grid.appendChild(rSumCell);
+    });
+
+    colSums.forEach(sum => {
+        const cSumCell = document.createElement('div');
+        cSumCell.className = 'col-sum-label';
+        cSumCell.innerText = `Col Sum: ${sum}`; // [cite: 46, 59]
+        grid.appendChild(cSumCell);
+    });
+
+    const d1 = data[0][0] + data[1][1] + data[2][2] + data[3][3];
+    const d2 = data[0][3] + data[1][2] + data[2][1] + data[3][0];
+    document.getElementById('diagInfo').innerText = `Diagonal Sums: Left (${d1}) | Right (${d2}) [cite: 47]`;
+    document.getElementById('magicUI').style.display = 'block';
+}
+
+function highlight(type) {
+    clearHighlight();
+    let ids = [];
+    if (type === 'corners') ids = ['0-0', '0-3', '3-0', '3-3']; // [cite: 5, 54]
+    if (type === 'center') ids = ['1-1', '1-2', '2-1', '2-2']; // [cite: 6, 54]
+    if (type === 'quads') ids = ['0-0', '0-1', '1-0', '1-1']; // [cite: 6, 54]
+    
+    ids.forEach(id => {
+        const el = document.getElementById(`cell-${id}`);
+        if(el) el.classList.add('highlighted');
+    });
+}
+
+function clearHighlight() {
+    currentCells.forEach(c => c.classList.remove('highlighted'));
+}
+</script>
+
+</body>
+</html>
